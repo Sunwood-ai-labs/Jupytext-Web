@@ -21,6 +21,7 @@ const elements = {
   progressFill: document.getElementById("progress-fill"),
   toFormat: document.getElementById("to-format"),
   copyBtn: document.getElementById("copy-btn"),
+  addTimestamp: document.getElementById("add-timestamp"),
   // Tab elements
   tabFile: document.getElementById("tab-file"),
   tabText: document.getElementById("tab-text"),
@@ -368,14 +369,17 @@ elements.convertBtn.addEventListener("click", async () => {
     let downloadName;
 
     // タイムスタンプを生成（YYYYMMDD_HHMMSS形式）
-    const now = new Date();
-    const timestamp = now.getFullYear() +
-      String(now.getMonth() + 1).padStart(2, '0') +
-      String(now.getDate()).padStart(2, '0') +
-      '_' +
-      String(now.getHours()).padStart(2, '0') +
-      String(now.getMinutes()).padStart(2, '0') +
-      String(now.getSeconds()).padStart(2, '0');
+    let timestamp = '';
+    if (elements.addTimestamp.checked) {
+      const now = new Date();
+      timestamp = '_' + now.getFullYear() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') +
+        '_' +
+        String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0') +
+        String(now.getSeconds()).padStart(2, '0');
+    }
 
     if (currentInputMode === 'file') {
       // ファイルモード
@@ -384,7 +388,7 @@ elements.convertBtn.addEventListener("click", async () => {
       // 拡張子決定
       const baseName = currentFile.name.replace(/\.[^.]+$/, "");
       const ext = toFormat === "ipynb" ? "ipynb" : toFormat.split(":")[0];
-      downloadName = `${baseName}_${timestamp}.${ext}`;
+      downloadName = `${baseName}${timestamp}.${ext}`;
     } else {
       // テキストモード
       const fromFormat = elements.textInputFormat.value;
@@ -414,7 +418,7 @@ elements.convertBtn.addEventListener("click", async () => {
         }
       }
 
-      downloadName = `${baseName}_${timestamp}.${ext}`;
+      downloadName = `${baseName}${timestamp}.${ext}`;
     }
 
     showProgress(70);

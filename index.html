@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="ブラウザだけで動くJupytextコンバータ - .ipynb, .py, .mdを相互変換" />
 
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📓</text></svg>">
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -124,6 +127,14 @@
             <option value="md">📝 md (Markdown)</option>
             <option value="myst">📝 myst (MyST Markdown)</option>
           </select>
+        </div>
+
+        <!-- Timestamp Option -->
+        <div class="field">
+          <label style="display: flex; align-items: center; cursor: pointer;">
+            <input type="checkbox" id="add-timestamp" checked style="margin-right: 8px;">
+            <span>🕐 ファイル名にタイムスタンプを追加</span>
+          </label>
         </div>
 
         <!-- Convert Button -->
