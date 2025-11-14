@@ -81,6 +81,51 @@ body {
   box-shadow: var(--shadow-xl);
 }
 
+/* Language Switcher */
+.language-switcher {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  width: fit-content;
+  margin-left: auto;
+}
+
+.lang-btn {
+  width: auto;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: none;
+}
+
+.lang-btn:hover {
+  background: rgba(124, 93, 255, 0.15);
+  color: var(--text-primary);
+  transform: none;
+}
+
+.lang-btn.active {
+  background: linear-gradient(120deg, #7c5dff, #a855f7);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(124, 93, 255, 0.4);
+}
+
+.lang-btn::before {
+  display: none;
+}
+
 .hero {
   text-align: left;
   margin-bottom: 2.5rem;
