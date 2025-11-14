@@ -4,290 +4,113 @@
   <meta charset="UTF-8" />
   <title>Jupytext Web Converter (GitHub Pages)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 1.5rem;
-      background: #f5f5f5;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
-    h1 {
-      font-size: 1.6rem;
-      margin-top: 0;
-      margin-bottom: 0.5rem;
-    }
-    p {
-      margin-top: 0;
-      color: #555;
-      font-size: 0.95rem;
-    }
-    .field {
-      margin: 1rem 0;
-    }
-    label {
-      display: block;
-      font-size: 0.9rem;
-      margin-bottom: 0.3rem;
-      font-weight: 600;
-    }
-    select, input[type="file"], button {
-      font-size: 0.95rem;
-    }
-    select, input[type="file"] {
-      width: 100%;
-      box-sizing: border-box;
-    }
-    button {
-      border: none;
-      border-radius: 999px;
-      padding: 0.6rem 1.4rem;
-      cursor: pointer;
-      background: #2563eb;
-      color: white;
-      font-weight: 600;
-      font-size: 0.95rem;
-      transition: background 0.2s;
-    }
-    button:hover:not(:disabled) {
-      background: #1d4ed8;
-    }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .status {
-      margin-top: 0.5rem;
-      font-size: 0.85rem;
-      color: #555;
-      min-height: 1.2em;
-    }
-    .status.error {
-      color: #b91c1c;
-    }
-    .status.success {
-      color: #059669;
-    }
-    .preview {
-      margin-top: 1rem;
-      font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.85rem;
-      background: #0b1020;
-      color: #e5e7eb;
-      border-radius: 12px;
-      padding: 0.75rem 1rem;
-      max-height: 240px;
-      overflow: auto;
-      white-space: pre;
-    }
-    .file-info {
-      margin-top: 0.5rem;
-      font-size: 0.85rem;
-      color: #666;
-    }
-    .footer {
-      margin-top: 2rem;
-      padding-top: 1rem;
-      border-top: 1px solid #e5e7eb;
-      font-size: 0.85rem;
-      color: #666;
-      text-align: center;
-    }
-    .footer a {
-      color: #2563eb;
-      text-decoration: none;
-    }
-    .footer a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <meta name="description" content="ブラウザだけで動くJupytextコンバータ - .ipynb, .py, .mdを相互変換" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Jupytext Web Converter</h1>
-    <p>
-      ブラウザだけで動く Jupytext コンバータです（GitHub Pages 対応）。<br />
-      <code>.ipynb</code>, <code>.py</code>, <code>.md</code> などを相互変換できます。
-    </p>
-
-    <div class="field">
-      <label for="file">ファイルを選択</label>
-      <input id="file" type="file" />
-      <div id="file-info" class="file-info"></div>
+    <!-- Header -->
+    <div class="header">
+      <h1>📓 Jupytext Web Converter</h1>
+      <p class="subtitle">
+        ブラウザだけで動く Jupytext コンバータです（GitHub Pages 対応）<br />
+        <code>.ipynb</code>, <code>.py</code>, <code>.md</code> などを相互変換できます
+      </p>
     </div>
 
+    <!-- File Upload Section -->
     <div class="field">
-      <label for="to-format">変換先フォーマット</label>
+      <label for="file">📁 ファイルを選択</label>
+      <div class="file-upload-wrapper">
+        <div id="file-drop-zone" class="file-drop-zone">
+          <div class="upload-icon">📤</div>
+          <div class="upload-text">ファイルをドラッグ＆ドロップ</div>
+          <div class="upload-hint">または クリックしてファイルを選択</div>
+        </div>
+        <input id="file" type="file" accept=".ipynb,.py,.md,.Rmd" />
+      </div>
+
+      <!-- File Info Display -->
+      <div id="file-info" class="file-info">
+        <div class="file-info-content">
+          <div class="file-details">
+            <span class="file-icon">📄</span>
+            <div>
+              <div id="file-name" class="file-name"></div>
+              <div id="file-size" class="file-size"></div>
+            </div>
+          </div>
+          <button id="remove-file" class="remove-file">✕ 削除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Format Selection -->
+    <div class="field">
+      <label for="to-format">🔄 変換先フォーマット</label>
       <select id="to-format">
-        <option value="ipynb">ipynb (Notebook)</option>
-        <option value="py:percent">py:percent (Python)</option>
-        <option value="py:light">py:light (Python)</option>
-        <option value="md">md (Markdown)</option>
-        <option value="myst">myst (MyST Markdown)</option>
+        <option value="ipynb">📓 ipynb (Jupyter Notebook)</option>
+        <option value="py:percent">🐍 py:percent (Python with %% cells)</option>
+        <option value="py:light">🐍 py:light (Python light format)</option>
+        <option value="md">📝 md (Markdown)</option>
+        <option value="myst">📝 myst (MyST Markdown)</option>
       </select>
     </div>
 
-    <div class="field">
-      <button id="convert" disabled>Pyodide 読み込み中...</button>
-      <div id="status" class="status"></div>
+    <!-- Convert Button -->
+    <div class="button-wrapper">
+      <button id="convert" disabled>⏳ Pyodide 読み込み中...</button>
     </div>
 
-    <div id="preview" class="preview" style="display:none;"></div>
+    <!-- Progress Bar -->
+    <div id="progress-container" class="progress-container">
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </div>
 
+    <!-- Status Message -->
+    <div id="status" class="status"></div>
+
+    <!-- Preview Section -->
+    <div id="preview" class="preview">
+      <div class="preview-header">
+        <span class="preview-title">📋 プレビュー</span>
+        <button id="copy-btn" class="copy-button">📋 コピー</button>
+      </div>
+      <div id="preview-content" class="preview-content"></div>
+    </div>
+
+    <!-- Footer -->
     <div class="footer">
-      Powered by <a href="https://pyodide.org/" target="_blank">Pyodide</a> and
-      <a href="https://jupytext.readthedocs.io/" target="_blank">Jupytext</a>
+      <div class="footer-text">
+        Powered by Pyodide and Jupytext
+      </div>
+      <div class="footer-links">
+        <a href="https://pyodide.org/" target="_blank" class="footer-link">
+          🔗 Pyodide
+        </a>
+        <a href="https://jupytext.readthedocs.io/" target="_blank" class="footer-link">
+          🔗 Jupytext
+        </a>
+        <a href="https://github.com/Sunwood-ai-labs/Jupytext-Web" target="_blank" class="footer-link">
+          🔗 GitHub
+        </a>
+      </div>
     </div>
   </div>
 
   <!-- Pyodide CDN -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
-  <script>
-    let pyodide = null;
-    let jupytextReady = false;
 
-    const statusEl = document.getElementById("status");
-    const convertBtn = document.getElementById("convert");
-    const previewEl = document.getElementById("preview");
-    const fileInput = document.getElementById("file");
-    const fileInfoEl = document.getElementById("file-info");
-
-    async function initPyodideAndJupytext() {
-      try {
-        statusEl.textContent = "Pyodide を読み込み中...";
-        pyodide = await loadPyodide();
-
-        statusEl.textContent = "jupytext と依存パッケージをインストール中...";
-        await pyodide.loadPackage("micropip");
-        await pyodide.runPythonAsync(`
-import micropip
-await micropip.install(["jupytext", "nbformat"])
-        `);
-
-        jupytextReady = true;
-        statusEl.textContent = "準備完了！ファイルを選んで変換できます。";
-        statusEl.classList.remove("error");
-        statusEl.classList.add("success");
-        convertBtn.textContent = "変換する";
-        convertBtn.disabled = false;
-      } catch (e) {
-        console.error(e);
-        statusEl.textContent = "初期化に失敗しました。コンソールを確認してください。";
-        statusEl.classList.add("error");
-        convertBtn.disabled = true;
-      }
-    }
-
-    initPyodideAndJupytext();
-
-    // ファイル選択時の情報表示
-    fileInput.addEventListener("change", (e) => {
-      previewEl.style.display = "none";
-      previewEl.textContent = "";
-
-      if (e.target.files.length > 0) {
-        const file = e.target.files[0];
-        const sizeKB = (file.size / 1024).toFixed(2);
-        fileInfoEl.textContent = `選択: ${file.name} (${sizeKB} KB)`;
-      } else {
-        fileInfoEl.textContent = "";
-      }
-    });
-
-    async function convertWithJupytext(file, toFormat) {
-      const arrayBuffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      const textDecoder = new TextDecoder("utf-8");
-      const content = textDecoder.decode(bytes);
-
-      const fileName = file.name;
-
-      const pyCode = `
-from jupytext import reads, writes
-
-content = ${JSON.stringify(content)}
-filename = ${JSON.stringify(fileName)}
-to_format = ${JSON.stringify(toFormat)}
-
-if filename.endswith(".ipynb"):
-    nb = reads(content, "ipynb")
-else:
-    nb = reads(content, None)
-
-out_text = writes(nb, to_format)
-      `;
-
-      await pyodide.runPythonAsync(pyCode);
-
-      const outText = pyodide.globals.get("out_text");
-      return outText;
-    }
-
-    convertBtn.addEventListener("click", async () => {
-      previewEl.style.display = "none";
-      previewEl.textContent = "";
-      statusEl.classList.remove("error", "success");
-
-      if (!jupytextReady) {
-        statusEl.textContent = "まだ初期化中です。少し待ってから再度お試しください。";
-        statusEl.classList.add("error");
-        return;
-      }
-
-      const toFormat = document.getElementById("to-format").value;
-
-      if (!fileInput.files.length) {
-        statusEl.textContent = "ファイルを選択してください。";
-        statusEl.classList.add("error");
-        return;
-      }
-
-      const file = fileInput.files[0];
-
-      statusEl.textContent = "変換中...";
-      convertBtn.disabled = true;
-
-      try {
-        const outText = await convertWithJupytext(file, toFormat);
-        statusEl.textContent = "変換完了！自動でダウンロードを開始します。";
-        statusEl.classList.add("success");
-
-        // 拡張子決定
-        const baseName = file.name.replace(/\.[^.]+$/, "");
-        const ext = toFormat === "ipynb" ? "ipynb" : toFormat.split(":")[0];
-        const downloadName = `${baseName}.${ext}`;
-
-        const blob = new Blob([outText], { type: "text/plain;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = downloadName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-
-        // プレビュー（テキストだけ）
-        previewEl.style.display = "block";
-        previewEl.textContent = outText.slice(0, 5000);
-        if (outText.length > 5000) {
-          previewEl.textContent += "\n\n... (プレビューは先頭5000文字まで)";
-        }
-      } catch (e) {
-        console.error(e);
-        statusEl.textContent = "変換に失敗しました。ファイル形式やコンソールを確認してください。";
-        statusEl.classList.add("error");
-      } finally {
-        convertBtn.disabled = false;
-      }
-    });
-  </script>
+  <!-- External JavaScript -->
+  <script src="./script.js"></script>
 </body>
 </html>
