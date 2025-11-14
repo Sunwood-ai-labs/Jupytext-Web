@@ -226,7 +226,7 @@ function updateCharCount() {
 function initAceEditor() {
   editor = ace.edit("text-input");
   editor.setTheme("ace/theme/monokai");
-  editor.session.setMode("ace/mode/python");
+  editor.session.setMode("ace/mode/markdown");
   editor.setOptions({
     fontSize: "14px",
     showPrintMargin: false,
@@ -394,7 +394,27 @@ elements.convertBtn.addEventListener("click", async () => {
 
       // ファイル名決定
       const ext = toFormat === "ipynb" ? "ipynb" : toFormat.split(":")[0];
-      downloadName = `converted_${timestamp}.${ext}`;
+
+      // マークダウンの # 見出しからファイル名を抽出
+      let baseName = 'converted';
+      const lines = textContent.split('\n');
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('#')) {
+          // # の後の文字列を取得し、ファイル名として使用可能な形式に変換
+          const heading = trimmedLine.replace(/^#+\s*/, '').trim();
+          if (heading) {
+            // ファイル名として使用できない文字を削除または置換
+            baseName = heading
+              .replace(/[/\\?%*:|"<>]/g, '-') // 無効な文字をハイフンに
+              .replace(/\s+/g, '_') // 空白をアンダースコアに
+              .substring(0, 100); // 長すぎる場合は切り詰め
+            break;
+          }
+        }
+      }
+
+      downloadName = `${baseName}_${timestamp}.${ext}`;
     }
 
     showProgress(70);
