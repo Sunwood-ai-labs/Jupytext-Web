@@ -3,6 +3,7 @@ let pyodide = null;
 let jupytextReady = false;
 let currentFile = null;
 let currentInputMode = 'file'; // 'file' or 'text'
+let editor = null; // Ace Editor インスタンス
 
 // DOM要素の取得
 const elements = {
@@ -217,8 +218,43 @@ function switchInputMode(mode) {
 
 // テキスト文字数を更新
 function updateCharCount() {
-  const charCount = elements.textInput.value.length;
+  const charCount = editor ? editor.getValue().length : 0;
   elements.textCharCount.textContent = `${charCount.toLocaleString()} 文字`;
+}
+
+// Ace Editorの初期化
+function initAceEditor() {
+  editor = ace.edit("text-input");
+  editor.setTheme("ace/theme/monokai");
+  editor.session.setMode("ace/mode/python");
+  editor.setOptions({
+    fontSize: "14px",
+    showPrintMargin: false,
+    enableBasicAutocompletion: true,
+    enableLiveAutocompletion: true,
+    tabSize: 2,
+    wrap: true
+  });
+
+  // エディターの内容が変更されたら文字数を更新
+  editor.session.on('change', function() {
+    updateCharCount();
+  });
+}
+
+// フォーマットに基づいて言語モードを設定
+function setEditorMode(format) {
+  if (!editor) return;
+
+  const modeMap = {
+    'ipynb': 'ace/mode/json',
+    'py': 'ace/mode/python',
+    'md': 'ace/mode/markdown',
+    'myst': 'ace/mode/markdown'
+  };
+
+  const mode = modeMap[format] || 'ace/mode/text';
+  editor.session.setMode(mode);
 }
 
 // イベントリスナー
@@ -232,16 +268,20 @@ elements.tabText.addEventListener("click", () => {
   switchInputMode('text');
 });
 
-// テキスト入力の文字数カウント
-elements.textInput.addEventListener("input", () => {
-  updateCharCount();
-});
-
 // テキストクリアボタン
 elements.clearTextBtn.addEventListener("click", () => {
-  elements.textInput.value = '';
+  if (editor) {
+    editor.setValue('');
+    editor.clearSelection();
+  }
   updateCharCount();
   hidePreview();
+});
+
+// テキスト入力フォーマットの変更
+elements.textInputFormat.addEventListener("change", () => {
+  const format = elements.textInputFormat.value;
+  setEditorMode(format);
 });
 
 // ファイル入力の変更
@@ -309,7 +349,8 @@ elements.convertBtn.addEventListener("click", async () => {
       return;
     }
   } else {
-    if (!elements.textInput.value.trim()) {
+    const editorContent = editor ? editor.getValue().trim() : '';
+    if (!editorContent) {
       showStatus("テキストを入力してください。", "error");
       return;
     }
@@ -326,6 +367,16 @@ elements.convertBtn.addEventListener("click", async () => {
     let outText;
     let downloadName;
 
+    // タイムスタンプを生成（YYYYMMDD_HHMMSS形式）
+    const now = new Date();
+    const timestamp = now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      '_' +
+      String(now.getHours()).padStart(2, '0') +
+      String(now.getMinutes()).padStart(2, '0') +
+      String(now.getSeconds()).padStart(2, '0');
+
     if (currentInputMode === 'file') {
       // ファイルモード
       outText = await convertWithJupytext(currentFile, toFormat);
@@ -333,17 +384,17 @@ elements.convertBtn.addEventListener("click", async () => {
       // 拡張子決定
       const baseName = currentFile.name.replace(/\.[^.]+$/, "");
       const ext = toFormat === "ipynb" ? "ipynb" : toFormat.split(":")[0];
-      downloadName = `${baseName}.${ext}`;
+      downloadName = `${baseName}_${timestamp}.${ext}`;
     } else {
       // テキストモード
       const fromFormat = elements.textInputFormat.value;
-      const textContent = elements.textInput.value;
+      const textContent = editor.getValue();
 
       outText = await convertTextWithJupytext(textContent, fromFormat, toFormat);
 
       // ファイル名決定
       const ext = toFormat === "ipynb" ? "ipynb" : toFormat.split(":")[0];
-      downloadName = `converted.${ext}`;
+      downloadName = `converted_${timestamp}.${ext}`;
     }
 
     showProgress(70);
@@ -393,3 +444,8 @@ elements.copyBtn.addEventListener("click", async () => {
 
 // 初期化開始
 initPyodideAndJupytext();
+
+// Ace Editorの初期化（ページ読み込み時）
+window.addEventListener('load', function() {
+  initAceEditor();
+});
