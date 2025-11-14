@@ -4,6 +4,149 @@ let jupytextReady = false;
 let currentFile = null;
 let currentInputMode = 'file'; // 'file' or 'text'
 let editor = null; // Ace Editor インスタンス
+let currentLanguage = 'ja'; // デフォルト言語は日本語
+
+// 翻訳データ
+const translations = {
+  ja: {
+    // Hero section
+    heroTitle: '📓 Jupytext Web Converter',
+    heroSubtitle: 'ブラウザだけで動く Jupytext コンバータ(GitHub Pages 対応)。',
+    heroSubtitle2: ' などを滑らかに往復変換します。',
+    tagBeta: 'Web · Pyodide',
+    tagFormat: 'ipynb ⇆ py ⇆ md',
+    highlightPyodide: 'Pyodide 上でネイティブに動作',
+    highlightDrag: 'ドラッグ＆ドロップですぐ変換',
+    highlightLocal: 'ローカルのみで完結・安全',
+
+    // Input section
+    inputMethodTitle: '入力方法を選択',
+    inputMethodDesc: 'ファイルまたはテキストから変換できます。',
+    tabFile: '📁 ファイルアップロード',
+    tabText: '📝 テキスト入力',
+
+    // File upload
+    labelFile: '📁 入力ファイル',
+    uploadDrag: 'ファイルをドラッグ＆ドロップ',
+    uploadClick: 'または クリックしてファイルを選択',
+    removeFile: '✕ 削除',
+
+    // Text input
+    labelTextInput: '📝 テキストを入力',
+    textCharCount: '文字',
+    clearText: '✕ クリア',
+    labelInputFormat: '📋 入力フォーマット',
+
+    // Format options
+    formatIpynb: '📓 ipynb (Jupyter Notebook)',
+    formatPy: '🐍 py (Python)',
+    formatMd: '📝 md (Markdown)',
+    formatMyst: '📝 myst (MyST Markdown)',
+    formatPyPercent: '🐍 py:percent (Python with %% cells)',
+    formatPyLight: '🐍 py:light (Python light format)',
+
+    // Convert section
+    labelToFormat: '🔄 変換先フォーマット',
+    labelTimestamp: '🕐 ファイル名にタイムスタンプを追加',
+    btnConvert: '🚀 変換する',
+    btnLoading: '⏳ Pyodide 読み込み中...',
+
+    // Preview section
+    previewEyebrow: 'ライブプレビュー',
+    previewTitle: '変換結果を即チェック',
+    previewCopy: '📋 コピー',
+    previewHeader: '📋 プレビュー',
+    previewPlaceholder: 'ここに変換結果が表示されます。',
+    previewHint: 'ファイルをアップロードして開始しましょう。',
+
+    // Status messages
+    statusPyodideLoading: 'Pyodide を読み込み中...',
+    statusInstalling: 'jupytext と依存パッケージをインストール中...',
+    statusReady: '準備完了！ファイルを選んで変換できます。',
+    statusInitError: '初期化に失敗しました。コンソールを確認してください。',
+    statusConverting: '変換中...',
+    statusSelectFile: 'ファイルを選択してください。',
+    statusInputText: 'テキストを入力してください。',
+    statusSuccess: '✅ 変換完了！ファイルをダウンロードしました。',
+    statusError: '❌ 変換に失敗しました。入力内容やコンソールを確認してください。',
+    statusWait: 'まだ初期化中です。少し待ってから再度お試しください。',
+    copySuccess: '✓ コピーしました!',
+    copyError: 'コピーに失敗しました:',
+
+    // Footer
+    footerPowered: 'Powered by Pyodide × Jupytext',
+    footerSecure: 'データはすべてブラウザ内で完結します。'
+  },
+  en: {
+    // Hero section
+    heroTitle: '📓 Jupytext Web Converter',
+    heroSubtitle: 'Browser-based Jupytext converter (GitHub Pages compatible).',
+    heroSubtitle2: ' and more seamlessly.',
+    tagBeta: 'Web · Pyodide',
+    tagFormat: 'ipynb ⇆ py ⇆ md',
+    highlightPyodide: 'Native on Pyodide',
+    highlightDrag: 'Quick convert via drag & drop',
+    highlightLocal: 'Secure & local processing',
+
+    // Input section
+    inputMethodTitle: 'Choose Input Method',
+    inputMethodDesc: 'Convert from file or text.',
+    tabFile: '📁 File Upload',
+    tabText: '📝 Text Input',
+
+    // File upload
+    labelFile: '📁 Input File',
+    uploadDrag: 'Drag & drop file here',
+    uploadClick: 'or Click to select file',
+    removeFile: '✕ Remove',
+
+    // Text input
+    labelTextInput: '📝 Input Text',
+    textCharCount: 'chars',
+    clearText: '✕ Clear',
+    labelInputFormat: '📋 Input Format',
+
+    // Format options
+    formatIpynb: '📓 ipynb (Jupyter Notebook)',
+    formatPy: '🐍 py (Python)',
+    formatMd: '📝 md (Markdown)',
+    formatMyst: '📝 myst (MyST Markdown)',
+    formatPyPercent: '🐍 py:percent (Python with %% cells)',
+    formatPyLight: '🐍 py:light (Python light format)',
+
+    // Convert section
+    labelToFormat: '🔄 Target Format',
+    labelTimestamp: '🕐 Add timestamp to filename',
+    btnConvert: '🚀 Convert',
+    btnLoading: '⏳ Loading Pyodide...',
+
+    // Preview section
+    previewEyebrow: 'Live Preview',
+    previewTitle: 'Check Result Instantly',
+    previewCopy: '📋 Copy',
+    previewHeader: '📋 Preview',
+    previewPlaceholder: 'Conversion result will be displayed here.',
+    previewHint: 'Upload a file to get started.',
+
+    // Status messages
+    statusPyodideLoading: 'Loading Pyodide...',
+    statusInstalling: 'Installing jupytext and dependencies...',
+    statusReady: 'Ready! Select a file to convert.',
+    statusInitError: 'Initialization failed. Please check console.',
+    statusConverting: 'Converting...',
+    statusSelectFile: 'Please select a file.',
+    statusInputText: 'Please input text.',
+    statusSuccess: '✅ Conversion complete! File downloaded.',
+    statusError: '❌ Conversion failed. Please check your input or console.',
+    statusWait: 'Still initializing. Please wait and try again.',
+    copySuccess: '✓ Copied!',
+    copyError: 'Copy failed:',
+
+    // Footer
+    footerPowered: 'Powered by Pyodide × Jupytext',
+    footerSecure: 'All data is processed locally in your browser.'
+  }
+};
 
 // DOM要素の取得
 const elements = {
@@ -33,6 +176,114 @@ const elements = {
   clearTextBtn: document.getElementById("clear-text"),
   textInputFormat: document.getElementById("text-input-format")
 };
+
+// 言語切り替え関数
+function switchLanguage(lang) {
+  currentLanguage = lang;
+  localStorage.setItem('language', lang);
+  updateUILanguage();
+}
+
+// UIの言語を更新
+function updateUILanguage() {
+  const t = translations[currentLanguage];
+
+  // Hero section
+  document.querySelector('h1').textContent = t.heroTitle;
+  document.querySelector('.subtitle').innerHTML = t.heroSubtitle + '<br /><code>.ipynb</code>, <code>.py</code>, <code>.md</code>' + t.heroSubtitle2;
+  document.querySelector('.tag.beta').textContent = t.tagBeta;
+  document.querySelector('.tag.format').textContent = t.tagFormat;
+
+  const highlights = document.querySelectorAll('.highlight small');
+  highlights[0].textContent = t.highlightPyodide;
+  highlights[1].textContent = t.highlightDrag;
+  highlights[2].textContent = t.highlightLocal;
+
+  // Input section
+  document.querySelector('.panel-primary h2').textContent = t.inputMethodTitle;
+  document.querySelector('.panel-lead').textContent = t.inputMethodDesc;
+  elements.tabFile.textContent = t.tabFile;
+  elements.tabText.textContent = t.tabText;
+
+  // File upload
+  document.querySelector('label[for="file"]').textContent = t.labelFile;
+  document.querySelector('.upload-text').textContent = t.uploadDrag;
+  document.querySelector('.upload-hint').textContent = t.uploadClick;
+  elements.removeFileBtn.textContent = t.removeFile;
+
+  // Text input
+  document.querySelector('label[for="text-input"]').textContent = t.labelTextInput;
+  elements.clearTextBtn.textContent = t.clearText;
+  document.querySelector('label[for="text-input-format"]').textContent = t.labelInputFormat;
+
+  // Format options
+  const textInputFormatOptions = elements.textInputFormat.querySelectorAll('option');
+  textInputFormatOptions[0].textContent = t.formatIpynb;
+  textInputFormatOptions[1].textContent = t.formatPy;
+  textInputFormatOptions[2].textContent = t.formatMd;
+  textInputFormatOptions[3].textContent = t.formatMyst;
+
+  const toFormatOptions = elements.toFormat.querySelectorAll('option');
+  toFormatOptions[0].textContent = t.formatIpynb;
+  toFormatOptions[1].textContent = t.formatPyPercent;
+  toFormatOptions[2].textContent = t.formatPyLight;
+  toFormatOptions[3].textContent = t.formatMd;
+  toFormatOptions[4].textContent = t.formatMyst;
+
+  // Convert section
+  document.querySelector('label[for="to-format"]').textContent = t.labelToFormat;
+  document.querySelector('label[for="add-timestamp"] span').textContent = t.labelTimestamp;
+
+  // Convert button
+  if (jupytextReady) {
+    elements.convertBtn.textContent = t.btnConvert;
+  } else {
+    elements.convertBtn.textContent = t.btnLoading;
+  }
+
+  // Preview section
+  document.querySelector('.eyebrow').textContent = t.previewEyebrow;
+  document.querySelector('.panel-preview h2').textContent = t.previewTitle;
+  elements.copyBtn.textContent = t.previewCopy;
+  document.querySelector('.preview-title').textContent = t.previewHeader;
+  document.querySelector('#preview-placeholder p').textContent = t.previewPlaceholder;
+  document.querySelector('#preview-placeholder span').textContent = t.previewHint;
+
+  // Footer
+  document.querySelector('.footer-text').textContent = t.footerPowered;
+  document.querySelector('.footer-subtext').textContent = t.footerSecure;
+
+  // Update character count
+  updateCharCount();
+}
+
+// 初期言語設定を読み込み
+function initLanguage() {
+  const savedLang = localStorage.getItem('language');
+  if (savedLang && translations[savedLang]) {
+    currentLanguage = savedLang;
+  }
+  updateUILanguage();
+
+  // 言語ボタンの状態を更新
+  updateLanguageButtons();
+}
+
+// 言語ボタンの状態を更新
+function updateLanguageButtons() {
+  const jaBtn = document.getElementById('lang-ja');
+  const enBtn = document.getElementById('lang-en');
+
+  if (!jaBtn || !enBtn) return;
+
+  if (currentLanguage === 'ja') {
+    jaBtn.classList.add('active');
+    enBtn.classList.remove('active');
+  } else {
+    enBtn.classList.add('active');
+    jaBtn.classList.remove('active');
+  }
+}
 
 // ステータスメッセージを表示
 function showStatus(message, type = 'info') {
@@ -91,13 +342,14 @@ function clearFileInfo() {
 // Pyodideとjupytextの初期化
 async function initPyodideAndJupytext() {
   try {
-    showStatus("Pyodide を読み込み中...", "info");
+    const t = translations[currentLanguage];
+    showStatus(t.statusPyodideLoading, "info");
     showProgress(10);
 
     pyodide = await loadPyodide();
     showProgress(40);
 
-    showStatus("jupytext と依存パッケージをインストール中...", "info");
+    showStatus(t.statusInstalling, "info");
     await pyodide.loadPackage("micropip");
     showProgress(60);
 
@@ -111,14 +363,15 @@ await micropip.install(["jupytext", "nbformat"])
 
     setTimeout(() => {
       hideProgress();
-      showStatus("準備完了！ファイルを選んで変換できます。", "success");
-      elements.convertBtn.textContent = "🚀 変換する";
+      showStatus(t.statusReady, "success");
+      elements.convertBtn.textContent = t.btnConvert;
       elements.convertBtn.disabled = false;
     }, 500);
   } catch (e) {
     console.error(e);
     hideProgress();
-    showStatus("初期化に失敗しました。コンソールを確認してください。", "error");
+    const t = translations[currentLanguage];
+    showStatus(t.statusInitError, "error");
     elements.convertBtn.disabled = true;
   }
 }
@@ -220,7 +473,8 @@ function switchInputMode(mode) {
 // テキスト文字数を更新
 function updateCharCount() {
   const charCount = editor ? editor.getValue().length : 0;
-  elements.textCharCount.textContent = `${charCount.toLocaleString()} 文字`;
+  const t = translations[currentLanguage];
+  elements.textCharCount.textContent = `${charCount.toLocaleString()} ${t.textCharCount}`;
 }
 
 // Ace Editorの初期化
@@ -336,8 +590,10 @@ elements.removeFileBtn.addEventListener("click", (e) => {
 elements.convertBtn.addEventListener("click", async () => {
   hidePreview();
 
+  const t = translations[currentLanguage];
+
   if (!jupytextReady) {
-    showStatus("まだ初期化中です。少し待ってから再度お試しください。", "error");
+    showStatus(t.statusWait, "error");
     return;
   }
 
@@ -346,18 +602,18 @@ elements.convertBtn.addEventListener("click", async () => {
   // 入力モードに応じた検証
   if (currentInputMode === 'file') {
     if (!currentFile) {
-      showStatus("ファイルを選択してください。", "error");
+      showStatus(t.statusSelectFile, "error");
       return;
     }
   } else {
     const editorContent = editor ? editor.getValue().trim() : '';
     if (!editorContent) {
-      showStatus("テキストを入力してください。", "error");
+      showStatus(t.statusInputText, "error");
       return;
     }
   }
 
-  showStatus("変換中...", "info");
+  showStatus(t.statusConverting, "info");
   showProgress(0);
   elements.convertBtn.disabled = true;
 
@@ -429,7 +685,7 @@ elements.convertBtn.addEventListener("click", async () => {
 
     showProgress(100);
 
-    showStatus("✅ 変換完了！ファイルをダウンロードしました。", "success");
+    showStatus(t.statusSuccess, "success");
 
     // プレビュー表示
     const previewText = outText.length > 5000
@@ -445,7 +701,7 @@ elements.convertBtn.addEventListener("click", async () => {
   } catch (e) {
     console.error(e);
     hideProgress();
-    showStatus("❌ 変換に失敗しました。入力内容やコンソールを確認してください。", "error");
+    showStatus(t.statusError, "error");
   } finally {
     elements.convertBtn.disabled = false;
   }
@@ -454,20 +710,38 @@ elements.convertBtn.addEventListener("click", async () => {
 // コピーボタン
 elements.copyBtn.addEventListener("click", async () => {
   const content = elements.previewContent.textContent;
+  const t = translations[currentLanguage];
   try {
     await navigator.clipboard.writeText(content);
     const originalText = elements.copyBtn.textContent;
-    elements.copyBtn.textContent = "✓ コピーしました!";
+    elements.copyBtn.textContent = t.copySuccess;
     setTimeout(() => {
       elements.copyBtn.textContent = originalText;
     }, 2000);
   } catch (err) {
-    console.error("コピーに失敗しました:", err);
+    console.error(t.copyError, err);
   }
 });
 
 // 初期化開始
-initPyodideAndJupytext();
+window.addEventListener('DOMContentLoaded', function() {
+  // 言語設定を初期化
+  initLanguage();
+
+  // 言語切り替えボタンのイベントリスナーを設定
+  const jaBtn = document.getElementById('lang-ja');
+  const enBtn = document.getElementById('lang-en');
+
+  if (jaBtn) {
+    jaBtn.addEventListener('click', () => switchLanguage('ja'));
+  }
+  if (enBtn) {
+    enBtn.addEventListener('click', () => switchLanguage('en'));
+  }
+
+  // Pyodide初期化
+  initPyodideAndJupytext();
+});
 
 // Ace Editorの初期化（ページ読み込み時）
 window.addEventListener('load', function() {
