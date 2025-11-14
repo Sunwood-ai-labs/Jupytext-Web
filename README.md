@@ -1,5 +1,7 @@
 <div align="center">
 
+![](Whisk_yjyjhjz5qmn4mgmz0syhnjytitn3qtlxumy00ym.jpeg)
+
 # 📓 Jupytext-Web
 
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Active-brightgreen)](https://Sunwood-ai-labs.github.io/Jupytext-Web/)
