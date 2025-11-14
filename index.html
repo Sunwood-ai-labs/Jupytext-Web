@@ -15,96 +15,135 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
+  <div class="ambient">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="glow glow-3"></div>
+  </div>
+
+  <div class="app-shell">
+    <!-- Hero -->
+    <header class="hero">
+      <div class="hero-meta">
+        <span class="tag beta">Web · Pyodide</span>
+        <span class="tag format">ipynb ⇆ py ⇆ md</span>
+      </div>
       <h1>📓 Jupytext Web Converter</h1>
       <p class="subtitle">
-        ブラウザだけで動く Jupytext コンバータです（GitHub Pages 対応）<br />
-        <code>.ipynb</code>, <code>.py</code>, <code>.md</code> などを相互変換できます
+        ブラウザだけで動く Jupytext コンバータ（GitHub Pages 対応）。<br />
+        <code>.ipynb</code>, <code>.py</code>, <code>.md</code> などを滑らかに往復変換します。
       </p>
-    </div>
-
-    <!-- File Upload Section -->
-    <div class="field">
-      <label for="file">📁 ファイルを選択</label>
-      <div class="file-upload-wrapper">
-        <div id="file-drop-zone" class="file-drop-zone">
-          <div class="upload-icon">📤</div>
-          <div class="upload-text">ファイルをドラッグ＆ドロップ</div>
-          <div class="upload-hint">または クリックしてファイルを選択</div>
+      <div class="hero-highlights">
+        <div class="highlight">
+          <span>⚡</span>
+          <small>Pyodide 上でネイティブに動作</small>
         </div>
-        <input id="file" type="file" accept=".ipynb,.py,.md,.Rmd" />
+        <div class="highlight">
+          <span>🪄</span>
+          <small>ドラッグ＆ドロップですぐ変換</small>
+        </div>
+        <div class="highlight">
+          <span>🔐</span>
+          <small>ローカルのみで完結・安全</small>
+        </div>
       </div>
+    </header>
 
-      <!-- File Info Display -->
-      <div id="file-info" class="file-info">
-        <div class="file-info-content">
-          <div class="file-details">
-            <span class="file-icon">📄</span>
-            <div>
-              <div id="file-name" class="file-name"></div>
-              <div id="file-size" class="file-size"></div>
+    <main class="panel-grid">
+      <!-- Controls Panel -->
+      <section class="panel panel-primary">
+        <h2>ファイルをアップロード</h2>
+        <p class="panel-lead">ファイルを選んでフォーマットを選択、<br class="br-md" />ワンクリックで変換。</p>
+
+        <!-- File Upload Section -->
+        <div class="field">
+          <label for="file">📁 入力ファイル</label>
+          <div class="file-upload-wrapper">
+            <div id="file-drop-zone" class="file-drop-zone">
+              <div class="upload-icon">📤</div>
+              <div class="upload-text">ファイルをドラッグ＆ドロップ</div>
+              <div class="upload-hint">または クリックしてファイルを選択</div>
+            </div>
+            <input id="file" type="file" accept=".ipynb,.py,.md,.Rmd" />
+          </div>
+
+          <!-- File Info Display -->
+          <div id="file-info" class="file-info">
+            <div class="file-info-content">
+              <div class="file-details">
+                <span class="file-icon">📄</span>
+                <div>
+                  <div id="file-name" class="file-name"></div>
+                  <div id="file-size" class="file-size"></div>
+                </div>
+              </div>
+              <button id="remove-file" class="remove-file">✕ 削除</button>
             </div>
           </div>
-          <button id="remove-file" class="remove-file">✕ 削除</button>
         </div>
-      </div>
-    </div>
 
-    <!-- Format Selection -->
-    <div class="field">
-      <label for="to-format">🔄 変換先フォーマット</label>
-      <select id="to-format">
-        <option value="ipynb">📓 ipynb (Jupyter Notebook)</option>
-        <option value="py:percent">🐍 py:percent (Python with %% cells)</option>
-        <option value="py:light">🐍 py:light (Python light format)</option>
-        <option value="md">📝 md (Markdown)</option>
-        <option value="myst">📝 myst (MyST Markdown)</option>
-      </select>
-    </div>
+        <!-- Format Selection -->
+        <div class="field">
+          <label for="to-format">🔄 変換先フォーマット</label>
+          <select id="to-format">
+            <option value="ipynb">📓 ipynb (Jupyter Notebook)</option>
+            <option value="py:percent">🐍 py:percent (Python with %% cells)</option>
+            <option value="py:light">🐍 py:light (Python light format)</option>
+            <option value="md">📝 md (Markdown)</option>
+            <option value="myst">📝 myst (MyST Markdown)</option>
+          </select>
+        </div>
 
-    <!-- Convert Button -->
-    <div class="button-wrapper">
-      <button id="convert" disabled>⏳ Pyodide 読み込み中...</button>
-    </div>
+        <!-- Convert Button -->
+        <div class="button-wrapper">
+          <button id="convert" disabled>⏳ Pyodide 読み込み中...</button>
+        </div>
 
-    <!-- Progress Bar -->
-    <div id="progress-container" class="progress-container">
-      <div class="progress-bar">
-        <div id="progress-fill" class="progress-fill"></div>
-      </div>
-    </div>
+        <!-- Progress Bar -->
+        <div id="progress-container" class="progress-container">
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+        </div>
 
-    <!-- Status Message -->
-    <div id="status" class="status"></div>
+        <!-- Status Message -->
+        <div id="status" class="status"></div>
+      </section>
 
-    <!-- Preview Section -->
-    <div id="preview" class="preview">
-      <div class="preview-header">
-        <span class="preview-title">📋 プレビュー</span>
-        <button id="copy-btn" class="copy-button">📋 コピー</button>
-      </div>
-      <div id="preview-content" class="preview-content"></div>
-    </div>
+      <!-- Preview Panel -->
+      <section class="panel panel-preview">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">ライブプレビュー</p>
+            <h2>変換結果を即チェック</h2>
+          </div>
+          <button id="copy-btn" class="copy-button">📋 コピー</button>
+        </div>
+        <div id="preview" class="preview">
+          <div class="preview-header">
+            <span class="preview-title">📋 プレビュー</span>
+          </div>
+          <div id="preview-content" class="preview-content"></div>
+        </div>
+        <div class="preview-placeholder" id="preview-placeholder">
+          <p>ここに変換結果が表示されます。</p>
+          <span>ファイルをアップロードして開始しましょう。</span>
+        </div>
+      </section>
+    </main>
 
     <!-- Footer -->
-    <div class="footer">
-      <div class="footer-text">
-        Powered by Pyodide and Jupytext
+    <footer class="footer">
+      <div>
+        <p class="footer-text">Powered by Pyodide × Jupytext</p>
+        <small class="footer-subtext">データはすべてブラウザ内で完結します。</small>
       </div>
       <div class="footer-links">
-        <a href="https://pyodide.org/" target="_blank" class="footer-link">
-          🔗 Pyodide
-        </a>
-        <a href="https://jupytext.readthedocs.io/" target="_blank" class="footer-link">
-          🔗 Jupytext
-        </a>
-        <a href="https://github.com/Sunwood-ai-labs/Jupytext-Web" target="_blank" class="footer-link">
-          🔗 GitHub
-        </a>
+        <a href="https://pyodide.org/" target="_blank" class="footer-link">Pyodide</a>
+        <a href="https://jupytext.readthedocs.io/" target="_blank" class="footer-link">Jupytext</a>
+        <a href="https://github.com/Sunwood-ai-labs/Jupytext-Web" target="_blank" class="footer-link">GitHub</a>
       </div>
-    </div>
+    </footer>
   </div>
 
   <!-- Pyodide CDN -->
