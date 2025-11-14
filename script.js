@@ -479,6 +479,9 @@ function updateCharCount() {
 
 // Ace Editorの初期化
 function initAceEditor() {
+  // Load language tools extension for autocompletion
+  ace.require("ace/ext/language_tools");
+
   editor = ace.edit("text-input");
   editor.setTheme("ace/theme/monokai");
   editor.session.setMode("ace/mode/markdown");
@@ -487,6 +490,7 @@ function initAceEditor() {
     showPrintMargin: false,
     enableBasicAutocompletion: true,
     enableLiveAutocompletion: true,
+    enableSnippets: true,
     tabSize: 2,
     wrap: true
   });
