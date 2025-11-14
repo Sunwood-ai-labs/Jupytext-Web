@@ -52,33 +52,65 @@
     <main class="panel-grid">
       <!-- Controls Panel -->
       <section class="panel panel-primary">
-        <h2>ファイルをアップロード</h2>
-        <p class="panel-lead">ファイルを選んでフォーマットを選択、<br class="br-md" />ワンクリックで変換。</p>
+        <h2>入力方法を選択</h2>
+        <p class="panel-lead">ファイルまたはテキストから変換できます。</p>
+
+        <!-- Input Mode Tabs -->
+        <div class="input-mode-tabs">
+          <button id="tab-file" class="tab-button active" data-mode="file">📁 ファイルアップロード</button>
+          <button id="tab-text" class="tab-button" data-mode="text">📝 テキスト入力</button>
+        </div>
 
         <!-- File Upload Section -->
-        <div class="field">
-          <label for="file">📁 入力ファイル</label>
-          <div class="file-upload-wrapper">
-            <div id="file-drop-zone" class="file-drop-zone">
-              <div class="upload-icon">📤</div>
-              <div class="upload-text">ファイルをドラッグ＆ドロップ</div>
-              <div class="upload-hint">または クリックしてファイルを選択</div>
+        <div id="file-upload-section" class="input-section active">
+          <div class="field">
+            <label for="file">📁 入力ファイル</label>
+            <div class="file-upload-wrapper">
+              <div id="file-drop-zone" class="file-drop-zone">
+                <div class="upload-icon">📤</div>
+                <div class="upload-text">ファイルをドラッグ＆ドロップ</div>
+                <div class="upload-hint">または クリックしてファイルを選択</div>
+              </div>
+              <input id="file" type="file" accept=".ipynb,.py,.md,.Rmd" />
             </div>
-            <input id="file" type="file" accept=".ipynb,.py,.md,.Rmd" />
+
+            <!-- File Info Display -->
+            <div id="file-info" class="file-info">
+              <div class="file-info-content">
+                <div class="file-details">
+                  <span class="file-icon">📄</span>
+                  <div>
+                    <div id="file-name" class="file-name"></div>
+                    <div id="file-size" class="file-size"></div>
+                  </div>
+                </div>
+                <button id="remove-file" class="remove-file">✕ 削除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text Input Section -->
+        <div id="text-input-section" class="input-section">
+          <div class="field">
+            <label for="text-input">📝 テキストを入力</label>
+            <div class="text-input-wrapper">
+              <textarea id="text-input" class="text-input-area" placeholder="ここにJupyter Notebook (.ipynb), Python (.py), Markdown (.md) などのコンテンツを貼り付けてください..."></textarea>
+              <div class="text-input-info">
+                <span id="text-char-count" class="text-char-count">0 文字</span>
+                <button id="clear-text" class="clear-text-btn">✕ クリア</button>
+              </div>
+            </div>
           </div>
 
-          <!-- File Info Display -->
-          <div id="file-info" class="file-info">
-            <div class="file-info-content">
-              <div class="file-details">
-                <span class="file-icon">📄</span>
-                <div>
-                  <div id="file-name" class="file-name"></div>
-                  <div id="file-size" class="file-size"></div>
-                </div>
-              </div>
-              <button id="remove-file" class="remove-file">✕ 削除</button>
-            </div>
+          <div class="field">
+            <label for="text-input-format">📋 入力フォーマット</label>
+            <select id="text-input-format">
+              <option value="ipynb">📓 ipynb (Jupyter Notebook)</option>
+              <option value="py">🐍 py (Python)</option>
+              <option value="md">📝 md (Markdown)</option>
+              <option value="myst">📝 myst (MyST Markdown)</option>
+            </select>
           </div>
         </div>
 

@@ -2,6 +2,7 @@
 let pyodide = null;
 let jupytextReady = false;
 let currentFile = null;
+let currentInputMode = 'file'; // 'file' or 'text'
 
 // DOM要素の取得
 const elements = {
@@ -18,7 +19,17 @@ const elements = {
   progressContainer: document.getElementById("progress-container"),
   progressFill: document.getElementById("progress-fill"),
   toFormat: document.getElementById("to-format"),
-  copyBtn: document.getElementById("copy-btn")
+  copyBtn: document.getElementById("copy-btn"),
+  // Tab elements
+  tabFile: document.getElementById("tab-file"),
+  tabText: document.getElementById("tab-text"),
+  fileUploadSection: document.getElementById("file-upload-section"),
+  textInputSection: document.getElementById("text-input-section"),
+  // Text input elements
+  textInput: document.getElementById("text-input"),
+  textCharCount: document.getElementById("text-char-count"),
+  clearTextBtn: document.getElementById("clear-text"),
+  textInputFormat: document.getElementById("text-input-format")
 };
 
 // ステータスメッセージを表示
@@ -110,6 +121,28 @@ await micropip.install(["jupytext", "nbformat"])
   }
 }
 
+// テキストから変換処理
+async function convertTextWithJupytext(content, fromFormat, toFormat) {
+  const pyCode = `
+from jupytext import reads, writes
+
+content = ${JSON.stringify(content)}
+from_format = ${JSON.stringify(fromFormat)}
+to_format = ${JSON.stringify(toFormat)}
+
+# Read the content with the specified format
+nb = reads(content, from_format)
+
+# Convert to the target format
+out_text = writes(nb, to_format)
+  `;
+
+  await pyodide.runPythonAsync(pyCode);
+
+  const outText = pyodide.globals.get("out_text");
+  return outText;
+}
+
 // ファイル変換処理
 async function convertWithJupytext(file, toFormat) {
   const arrayBuffer = await file.arrayBuffer();
@@ -161,7 +194,55 @@ function handleFile(file) {
   showFileInfo(file);
 }
 
+// タブ切り替え関数
+function switchInputMode(mode) {
+  currentInputMode = mode;
+
+  // タブボタンの状態を更新
+  if (mode === 'file') {
+    elements.tabFile.classList.add('active');
+    elements.tabText.classList.remove('active');
+    elements.fileUploadSection.classList.add('active');
+    elements.textInputSection.classList.remove('active');
+  } else {
+    elements.tabText.classList.add('active');
+    elements.tabFile.classList.remove('active');
+    elements.textInputSection.classList.add('active');
+    elements.fileUploadSection.classList.remove('active');
+  }
+
+  // プレビューをクリア
+  hidePreview();
+}
+
+// テキスト文字数を更新
+function updateCharCount() {
+  const charCount = elements.textInput.value.length;
+  elements.textCharCount.textContent = `${charCount.toLocaleString()} 文字`;
+}
+
 // イベントリスナー
+
+// タブ切り替え
+elements.tabFile.addEventListener("click", () => {
+  switchInputMode('file');
+});
+
+elements.tabText.addEventListener("click", () => {
+  switchInputMode('text');
+});
+
+// テキスト入力の文字数カウント
+elements.textInput.addEventListener("input", () => {
+  updateCharCount();
+});
+
+// テキストクリアボタン
+elements.clearTextBtn.addEventListener("click", () => {
+  elements.textInput.value = '';
+  updateCharCount();
+  hidePreview();
+});
 
 // ファイル入力の変更
 elements.fileInput.addEventListener("change", (e) => {
@@ -221,9 +302,17 @@ elements.convertBtn.addEventListener("click", async () => {
 
   const toFormat = elements.toFormat.value;
 
-  if (!currentFile) {
-    showStatus("ファイルを選択してください。", "error");
-    return;
+  // 入力モードに応じた検証
+  if (currentInputMode === 'file') {
+    if (!currentFile) {
+      showStatus("ファイルを選択してください。", "error");
+      return;
+    }
+  } else {
+    if (!elements.textInput.value.trim()) {
+      showStatus("テキストを入力してください。", "error");
+      return;
+    }
   }
 
   showStatus("変換中...", "info");
@@ -234,15 +323,30 @@ elements.convertBtn.addEventListener("click", async () => {
     // プログレスバーのアニメーション
     showProgress(30);
 
-    const outText = await convertWithJupytext(currentFile, toFormat);
+    let outText;
+    let downloadName;
+
+    if (currentInputMode === 'file') {
+      // ファイルモード
+      outText = await convertWithJupytext(currentFile, toFormat);
+
+      // 拡張子決定
+      const baseName = currentFile.name.replace(/\.[^.]+$/, "");
+      const ext = toFormat === "ipynb" ? "ipynb" : toFormat.split(":")[0];
+      downloadName = `${baseName}.${ext}`;
+    } else {
+      // テキストモード
+      const fromFormat = elements.textInputFormat.value;
+      const textContent = elements.textInput.value;
+
+      outText = await convertTextWithJupytext(textContent, fromFormat, toFormat);
+
+      // ファイル名決定
+      const ext = toFormat === "ipynb" ? "ipynb" : toFormat.split(":")[0];
+      downloadName = `converted.${ext}`;
+    }
 
     showProgress(70);
-
-    // 拡張子決定
-    const baseName = currentFile.name.replace(/\.[^.]+$/, "");
-    const ext = toFormat === "ipynb" ? "ipynb" : toFormat.split(":")[0];
-    const downloadName = `${baseName}.${ext}`;
-
     showProgress(90);
 
     // ダウンロード
@@ -266,7 +370,7 @@ elements.convertBtn.addEventListener("click", async () => {
   } catch (e) {
     console.error(e);
     hideProgress();
-    showStatus("❌ 変換に失敗しました。ファイル形式やコンソールを確認してください。", "error");
+    showStatus("❌ 変換に失敗しました。入力内容やコンソールを確認してください。", "error");
   } finally {
     elements.convertBtn.disabled = false;
   }
