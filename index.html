@@ -95,7 +95,7 @@
           <div class="field">
             <label for="text-input">📝 テキストを入力</label>
             <div class="text-input-wrapper">
-              <textarea id="text-input" class="text-input-area" placeholder="ここにJupyter Notebook (.ipynb), Python (.py), Markdown (.md) などのコンテンツを貼り付けてください..."></textarea>
+              <div id="text-input" class="text-input-area"></div>
               <div class="text-input-info">
                 <span id="text-char-count" class="text-char-count">0 文字</span>
                 <button id="clear-text" class="clear-text-btn">✕ クリア</button>
@@ -177,6 +177,9 @@
       </div>
     </footer>
   </div>
+
+  <!-- Ace Editor CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.32.6/src-min-noconflict/ace.js"></script>
 
   <!-- Pyodide CDN -->
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
