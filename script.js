@@ -855,18 +855,15 @@ function createNotebookCell(cell, index) {
 
 // Create code cell
 function createCodeCell(cell, index) {
-  const container = document.createElement('div');
+  const fragment = document.createDocumentFragment();
 
   // Cell header
   const header = document.createElement('div');
   header.className = 'cell-header';
   header.textContent = `In [${cell.execution_count || ' '}]:`;
-  container.appendChild(header);
+  fragment.appendChild(header);
 
-  // Code input
-  const inputDiv = document.createElement('div');
-  inputDiv.className = 'cell-input';
-
+  // Code block (直接追加、inputDiv削除)
   const codeBlock = document.createElement('div');
   codeBlock.className = 'code-block';
 
@@ -877,55 +874,54 @@ function createCodeCell(cell, index) {
 
   pre.appendChild(code);
   codeBlock.appendChild(pre);
-  inputDiv.appendChild(codeBlock);
-  container.appendChild(inputDiv);
+  fragment.appendChild(codeBlock);
 
   // Cell outputs
   if (cell.outputs && cell.outputs.length > 0) {
-    const outputsDiv = document.createElement('div');
-    outputsDiv.className = 'cell-outputs';
-
     const outputHeader = document.createElement('div');
     outputHeader.className = 'cell-header';
     outputHeader.textContent = `Out[${cell.execution_count || ' '}]:`;
-    outputsDiv.appendChild(outputHeader);
+    fragment.appendChild(outputHeader);
 
     cell.outputs.forEach(output => {
       const outputDiv = createNotebookOutput(output);
       if (outputDiv) {
-        outputsDiv.appendChild(outputDiv);
+        fragment.appendChild(outputDiv);
       }
     });
-
-    container.appendChild(outputsDiv);
   }
 
-  return container;
+  return fragment;
 }
 
 // Create markdown cell
 function createMarkdownCell(cell) {
-  const container = document.createElement('div');
-  container.className = 'markdown-content';
-
   const source = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+  const fragment = document.createDocumentFragment();
+  const tempDiv = document.createElement('div');
+
   if (typeof marked !== 'undefined') {
-    container.innerHTML = marked.parse(source);
+    tempDiv.innerHTML = marked.parse(source);
   } else {
-    container.textContent = source;
+    tempDiv.textContent = source;
   }
 
-  return container;
+  // 直接子要素をフラグメントに追加して、余分なラッパーを削除
+  while (tempDiv.firstChild) {
+    fragment.appendChild(tempDiv.firstChild);
+  }
+
+  return fragment;
 }
 
 // Create raw cell
 function createRawCell(cell, index) {
-  const container = document.createElement('div');
+  const fragment = document.createDocumentFragment();
 
   const header = document.createElement('div');
   header.className = 'cell-header';
   header.textContent = 'Raw Cell:';
-  container.appendChild(header);
+  fragment.appendChild(header);
 
   const pre = document.createElement('pre');
   pre.className = 'output-text';
@@ -934,9 +930,9 @@ function createRawCell(cell, index) {
   const wrapper = document.createElement('div');
   wrapper.className = 'cell-output';
   wrapper.appendChild(pre);
-  container.appendChild(wrapper);
+  fragment.appendChild(wrapper);
 
-  return container;
+  return fragment;
 }
 
 // Create notebook output element
