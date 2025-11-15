@@ -58,7 +58,6 @@ const translations = {
     previewEyebrow: 'ライブプレビュー',
     previewTitle: '変換結果を即チェック',
     previewCopy: '📋 コピー',
-    previewHeader: '📋 プレビュー',
     previewPlaceholder: 'ここに変換結果が表示されます。',
     previewHint: 'ファイルをアップロードして開始しましょう。',
 
@@ -127,7 +126,6 @@ const translations = {
     previewEyebrow: 'Live Preview',
     previewTitle: 'Check Result Instantly',
     previewCopy: '📋 Copy',
-    previewHeader: '📋 Preview',
     previewPlaceholder: 'Conversion result will be displayed here.',
     previewHint: 'Upload a file to get started.',
 
@@ -248,7 +246,6 @@ function updateUILanguage() {
   document.querySelector('.eyebrow').textContent = t.previewEyebrow;
   document.querySelector('.panel-preview h2').textContent = t.previewTitle;
   elements.copyBtn.textContent = t.previewCopy;
-  document.querySelector('.preview-title').textContent = t.previewHeader;
   document.querySelector('#preview-placeholder p').textContent = t.previewPlaceholder;
   document.querySelector('#preview-placeholder span').textContent = t.previewHint;
 
