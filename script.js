@@ -325,6 +325,8 @@ function showPreview(content, format = null) {
   }
 
   // 通常のコードプレビュー表示
+  elements.previewContent.classList.remove('notebook-mode');
+
   if (previewEditor) {
     previewEditor.setValue(content, -1); // -1 でカーソルを先頭に
 
@@ -815,16 +817,13 @@ function renderNotebookPreview(content) {
     const notebook = JSON.parse(content);
     const cells = notebook.cells || [];
 
-    const container = document.createElement('div');
-    container.className = 'notebook-preview';
+    elements.previewContent.innerHTML = '';
+    elements.previewContent.classList.add('notebook-mode');
 
     cells.forEach((cell, index) => {
       const cellElement = createNotebookCell(cell, index);
-      container.appendChild(cellElement);
+      elements.previewContent.appendChild(cellElement);
     });
-
-    elements.previewContent.innerHTML = '';
-    elements.previewContent.appendChild(container);
 
     // Apply syntax highlighting
     if (typeof Prism !== 'undefined') {
