@@ -4,6 +4,7 @@ let jupytextReady = false;
 let currentFile = null;
 let currentInputMode = 'file'; // 'file' or 'text'
 let editor = null; // Ace Editor インスタンス
+let previewEditor = null; // プレビュー用 Ace Editor インスタンス
 let currentLanguage = 'ja'; // デフォルト言語は日本語
 
 // 翻訳データ
@@ -309,15 +310,38 @@ function hideProgress() {
 }
 
 // プレビューを表示
-function showPreview(content) {
-  elements.previewContent.textContent = content;
+function showPreview(content, format = null) {
+  if (previewEditor) {
+    previewEditor.setValue(content, -1); // -1 でカーソルを先頭に
+
+    // フォーマットに応じてシンタックスハイライトモードを設定
+    if (format) {
+      const modeMap = {
+        'ipynb': 'ace/mode/json',
+        'py': 'ace/mode/python',
+        'py:percent': 'ace/mode/python',
+        'py:light': 'ace/mode/python',
+        'md': 'ace/mode/markdown',
+        'myst': 'ace/mode/markdown'
+      };
+      const mode = modeMap[format] || 'ace/mode/text';
+      previewEditor.session.setMode(mode);
+    }
+  } else {
+    // フォールバック: プレビューエディタが初期化されていない場合
+    elements.previewContent.textContent = content;
+  }
   elements.preview.classList.add('show');
 }
 
 // プレビューを非表示
 function hidePreview() {
   elements.preview.classList.remove('show');
-  elements.previewContent.textContent = '';
+  if (previewEditor) {
+    previewEditor.setValue('', -1);
+  } else {
+    elements.previewContent.textContent = '';
+  }
 }
 
 // ファイル情報を表示
@@ -499,6 +523,26 @@ function initAceEditor() {
   editor.session.on('change', function() {
     updateCharCount();
   });
+}
+
+// プレビュー用 Ace Editorの初期化
+function initPreviewEditor() {
+  previewEditor = ace.edit("preview-content");
+  previewEditor.setTheme("ace/theme/monokai");
+  previewEditor.session.setMode("ace/mode/markdown");
+  previewEditor.setOptions({
+    fontSize: "13px",
+    showPrintMargin: false,
+    readOnly: true,
+    highlightActiveLine: false,
+    highlightGutterLine: false,
+    tabSize: 2,
+    wrap: true,
+    showGutter: true
+  });
+
+  // 読み取り専用モードのスタイル調整
+  previewEditor.renderer.$cursorLayer.element.style.display = "none";
 }
 
 // フォーマットに基づいて言語モードを設定
@@ -696,7 +740,7 @@ elements.convertBtn.addEventListener("click", async () => {
       ? outText.slice(0, 5000) + "\n\n... (プレビューは先頭5000文字まで)"
       : outText;
 
-    showPreview(previewText);
+    showPreview(previewText, toFormat);
 
     setTimeout(() => {
       hideProgress();
@@ -713,7 +757,7 @@ elements.convertBtn.addEventListener("click", async () => {
 
 // コピーボタン
 elements.copyBtn.addEventListener("click", async () => {
-  const content = elements.previewContent.textContent;
+  const content = previewEditor ? previewEditor.getValue() : elements.previewContent.textContent;
   const t = translations[currentLanguage];
   try {
     await navigator.clipboard.writeText(content);
@@ -750,4 +794,5 @@ window.addEventListener('DOMContentLoaded', function() {
 // Ace Editorの初期化（ページ読み込み時）
 window.addEventListener('load', function() {
   initAceEditor();
+  initPreviewEditor();
 });
