@@ -6,6 +6,8 @@ let currentInputMode = 'file'; // 'file' or 'text'
 let editor = null; // Ace Editor インスタンス
 let previewEditor = null; // プレビュー用 Ace Editor インスタンス
 let currentLanguage = 'ja'; // デフォルト言語は日本語
+let ansi_up = null; // AnsiUp インスタンス
+let currentPreviewContent = ''; // 現在のプレビューコンテンツ（コピー用）
 
 // 翻訳データ
 const translations = {
@@ -311,6 +313,21 @@ function hideProgress() {
 
 // プレビューを表示
 function showPreview(content, format = null) {
+  // コンテンツを保存（コピー用）
+  currentPreviewContent = content;
+
+  // ipynb形式の場合はノートブックプレビューを表示
+  if (format === 'ipynb') {
+    try {
+      renderNotebookPreview(content);
+      return;
+    } catch (error) {
+      console.error('Failed to render notebook preview, falling back to code view:', error);
+      // エラーが発生した場合は通常のコードビューにフォールバック
+    }
+  }
+
+  // 通常のコードプレビュー表示
   if (previewEditor) {
     previewEditor.setValue(content, -1); // -1 でカーソルを先頭に
 
@@ -337,10 +354,11 @@ function showPreview(content, format = null) {
 // プレビューを非表示
 function hidePreview() {
   elements.preview.classList.remove('show');
+  currentPreviewContent = '';
   if (previewEditor) {
     previewEditor.setValue('', -1);
   } else {
-    elements.previewContent.textContent = '';
+    elements.previewContent.innerHTML = '';
   }
 }
 
@@ -757,7 +775,16 @@ elements.convertBtn.addEventListener("click", async () => {
 
 // コピーボタン
 elements.copyBtn.addEventListener("click", async () => {
-  const content = previewEditor ? previewEditor.getValue() : elements.previewContent.textContent;
+  // ノートブックプレビューの場合はcurrentPreviewContentを使用
+  let content;
+  if (currentPreviewContent) {
+    content = currentPreviewContent;
+  } else if (previewEditor) {
+    content = previewEditor.getValue();
+  } else {
+    content = elements.previewContent.textContent;
+  }
+
   const t = translations[currentLanguage];
   try {
     await navigator.clipboard.writeText(content);
@@ -770,6 +797,233 @@ elements.copyBtn.addEventListener("click", async () => {
     console.error(t.copyError, err);
   }
 });
+
+// Notebook Preview Functions
+// ===========================
+
+// Configure marked options
+if (typeof marked !== 'undefined') {
+  marked.setOptions({
+    breaks: true,
+    gfm: true,
+    headerIds: true,
+    mangle: false
+  });
+}
+
+// Render notebook as preview
+function renderNotebookPreview(content) {
+  try {
+    const notebook = JSON.parse(content);
+    const cells = notebook.cells || [];
+
+    const container = document.createElement('div');
+    container.className = 'notebook-preview';
+
+    cells.forEach((cell, index) => {
+      const cellElement = createNotebookCell(cell, index);
+      container.appendChild(cellElement);
+    });
+
+    elements.previewContent.innerHTML = '';
+    elements.previewContent.appendChild(container);
+
+    // Apply syntax highlighting
+    if (typeof Prism !== 'undefined') {
+      Prism.highlightAll();
+    }
+
+    elements.preview.classList.add('show');
+  } catch (error) {
+    console.error('Error rendering notebook:', error);
+    throw error;
+  }
+}
+
+// Create a notebook cell element
+function createNotebookCell(cell, index) {
+  const cellDiv = document.createElement('div');
+  cellDiv.className = `notebook-cell ${cell.cell_type}-cell`;
+
+  if (cell.cell_type === 'code') {
+    cellDiv.appendChild(createCodeCell(cell, index));
+  } else if (cell.cell_type === 'markdown') {
+    cellDiv.appendChild(createMarkdownCell(cell));
+  } else if (cell.cell_type === 'raw') {
+    cellDiv.appendChild(createRawCell(cell, index));
+  }
+
+  return cellDiv;
+}
+
+// Create code cell
+function createCodeCell(cell, index) {
+  const container = document.createElement('div');
+
+  // Cell header
+  const header = document.createElement('div');
+  header.className = 'cell-header';
+  header.textContent = `In [${cell.execution_count || ' '}]:`;
+  container.appendChild(header);
+
+  // Code input
+  const inputDiv = document.createElement('div');
+  inputDiv.className = 'cell-input';
+
+  const codeBlock = document.createElement('div');
+  codeBlock.className = 'code-block';
+
+  const pre = document.createElement('pre');
+  const code = document.createElement('code');
+  code.className = 'language-python';
+  code.textContent = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+
+  pre.appendChild(code);
+  codeBlock.appendChild(pre);
+  inputDiv.appendChild(codeBlock);
+  container.appendChild(inputDiv);
+
+  // Cell outputs
+  if (cell.outputs && cell.outputs.length > 0) {
+    const outputsDiv = document.createElement('div');
+    outputsDiv.className = 'cell-outputs';
+
+    const outputHeader = document.createElement('div');
+    outputHeader.className = 'cell-header';
+    outputHeader.textContent = `Out[${cell.execution_count || ' '}]:`;
+    outputsDiv.appendChild(outputHeader);
+
+    cell.outputs.forEach(output => {
+      const outputDiv = createNotebookOutput(output);
+      if (outputDiv) {
+        outputsDiv.appendChild(outputDiv);
+      }
+    });
+
+    container.appendChild(outputsDiv);
+  }
+
+  return container;
+}
+
+// Create markdown cell
+function createMarkdownCell(cell) {
+  const container = document.createElement('div');
+  container.className = 'markdown-content';
+
+  const source = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+  if (typeof marked !== 'undefined') {
+    container.innerHTML = marked.parse(source);
+  } else {
+    container.textContent = source;
+  }
+
+  return container;
+}
+
+// Create raw cell
+function createRawCell(cell, index) {
+  const container = document.createElement('div');
+
+  const header = document.createElement('div');
+  header.className = 'cell-header';
+  header.textContent = 'Raw Cell:';
+  container.appendChild(header);
+
+  const pre = document.createElement('pre');
+  pre.className = 'output-text';
+  pre.textContent = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'cell-output';
+  wrapper.appendChild(pre);
+  container.appendChild(wrapper);
+
+  return container;
+}
+
+// Create notebook output element
+function createNotebookOutput(output) {
+  const outputDiv = document.createElement('div');
+  outputDiv.className = 'cell-output';
+
+  if (output.output_type === 'stream') {
+    const pre = document.createElement('pre');
+    pre.className = 'output-text';
+    const text = Array.isArray(output.text) ? output.text.join('') : output.text;
+    pre.innerHTML = ansi_up ? ansi_up.ansi_to_html(text) : text;
+    outputDiv.appendChild(pre);
+  } else if (output.output_type === 'execute_result' || output.output_type === 'display_data') {
+    if (output.data) {
+      outputDiv.appendChild(createNotebookOutputData(output.data));
+    }
+  } else if (output.output_type === 'error') {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'output-error';
+
+    const errorText = document.createElement('pre');
+    errorText.className = 'output-text';
+    const traceback = output.traceback ? output.traceback.join('\n') : '';
+    errorText.innerHTML = ansi_up ? ansi_up.ansi_to_html(traceback) : traceback;
+
+    errorDiv.appendChild(errorText);
+    outputDiv.appendChild(errorDiv);
+  }
+
+  return outputDiv;
+}
+
+// Create notebook output data
+function createNotebookOutputData(data) {
+  const container = document.createElement('div');
+
+  // Priority order for output formats
+  if (data['text/html']) {
+    const htmlDiv = document.createElement('div');
+    htmlDiv.className = 'output-html';
+    const htmlContent = Array.isArray(data['text/html'])
+      ? data['text/html'].join('')
+      : data['text/html'];
+    htmlDiv.innerHTML = htmlContent;
+    container.appendChild(htmlDiv);
+  } else if (data['image/png']) {
+    const img = document.createElement('img');
+    img.className = 'output-image';
+    img.src = 'data:image/png;base64,' + data['image/png'];
+    container.appendChild(img);
+  } else if (data['image/jpeg']) {
+    const img = document.createElement('img');
+    img.className = 'output-image';
+    img.src = 'data:image/jpeg;base64,' + data['image/jpeg'];
+    container.appendChild(img);
+  } else if (data['image/svg+xml']) {
+    const svgDiv = document.createElement('div');
+    svgDiv.className = 'output-html';
+    const svgContent = Array.isArray(data['image/svg+xml'])
+      ? data['image/svg+xml'].join('')
+      : data['image/svg+xml'];
+    svgDiv.innerHTML = svgContent;
+    container.appendChild(svgDiv);
+  } else if (data['text/plain']) {
+    const pre = document.createElement('pre');
+    pre.className = 'output-text';
+    const text = Array.isArray(data['text/plain'])
+      ? data['text/plain'].join('')
+      : data['text/plain'];
+    pre.textContent = text;
+    container.appendChild(pre);
+  } else if (data['application/json']) {
+    const pre = document.createElement('pre');
+    pre.className = 'output-text';
+    const jsonContent = typeof data['application/json'] === 'string'
+      ? data['application/json']
+      : JSON.stringify(data['application/json'], null, 2);
+    pre.textContent = jsonContent;
+    container.appendChild(pre);
+  }
+
+  return container;
+}
 
 // 初期化開始
 window.addEventListener('DOMContentLoaded', function() {
@@ -785,6 +1039,13 @@ window.addEventListener('DOMContentLoaded', function() {
   }
   if (enBtn) {
     enBtn.addEventListener('click', () => switchLanguage('en'));
+  }
+
+  // Initialize AnsiUp after DOM is loaded
+  if (typeof AnsiUp !== 'undefined') {
+    ansi_up = new AnsiUp();
+  } else {
+    console.warn('AnsiUp library not loaded');
   }
 
   // Pyodide初期化
