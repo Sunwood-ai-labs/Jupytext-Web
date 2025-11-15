@@ -754,9 +754,10 @@ elements.convertBtn.addEventListener("click", async () => {
     showStatus(t.statusSuccess, "success");
 
     // プレビュー表示
-    const previewText = outText.length > 5000
-      ? outText.slice(0, 5000) + "\n\n... (プレビューは先頭5000文字まで)"
-      : outText;
+    // ipynb形式の場合はJSON構造を保持するため切り詰めない
+    const previewText = (toFormat === 'ipynb' || outText.length <= 5000)
+      ? outText
+      : outText.slice(0, 5000) + "\n\n... (プレビューは先頭5000文字まで)";
 
     showPreview(previewText, toFormat);
 
