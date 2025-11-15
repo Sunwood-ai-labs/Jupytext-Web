@@ -669,21 +669,6 @@ button:disabled {
   display: block;
 }
 
-.preview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-}
-
-.preview-title {
-  font-weight: 600;
-  color: #cbd5f5;
-  font-size: 0.9rem;
-}
-
 .preview-content {
   line-height: 1.6;
   min-height: 350px;
