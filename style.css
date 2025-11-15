@@ -686,6 +686,9 @@ button:disabled {
 
 .preview-content {
   line-height: 1.6;
+  min-height: 350px;
+  height: 350px;
+  position: relative;
 }
 
 .preview-placeholder {
