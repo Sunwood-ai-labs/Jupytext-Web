@@ -1,0 +1,11 @@
+{
+  "generation_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "prompt": "A Celestial Clockwork Dreamscape featuring a ringed planet spirit whose orbit trails form the elegant lettering “Jupytext Web - v0\.0\.1 -”, where stars follow rhythmic mechanical patterns. Use a palette dominated by deep starlit indigo for the background, with silver-luminescent accents for the glowing elements, creating an astral choreographed scene.",
+  "model": "imagen-4-ultra",
+  "num_images": 1,
+  "aspect_ratio": "16:9",
+  "seed": "",
+  "workflow_run": "1",
+  "commit_sha": "cb5f1ca424885bcba7b2a15df84637f59ba19820",
+  "tag": "v0.0.1"
+}
